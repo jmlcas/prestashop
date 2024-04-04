@@ -1,0 +1,46 @@
+services:
+
+  mysql:
+    image: mariadb:11.2
+    container_name: prestashop-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=prestashop
+      - MYSQL_DATABASE=prestashop
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db-data:/var/lib/mysql
+    networks:
+      - prestashop
+
+  prestashop:
+    image: prestashop/prestashop:latest
+    container_name: prestashop
+    restart: unless-stopped
+    environment:
+      - DB_SERVER=mysql
+    ports:
+      - "8200:80"
+      - "8443:443"  
+    depends_on:
+      - mysql
+    volumes:
+      - ./html:/var/www/html:delegated
+    networks:
+      - prestashop
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:19.0.3
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    command:
+      - start-dev
+    ports:
+      - "8003:8080"
+    networks:
+      - prestashop
+
+networks:
+  prestashop:
